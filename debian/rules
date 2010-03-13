@@ -1,0 +1,995 @@
+#!/usr/bin/make -f
+
+#export DH_VERBOSE=1
+
+include /usr/share/quilt/quilt.make
+
+NCPUS := $(shell getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1)
+
+ifeq ($(NCPUS),-1)
+	NCPUS:=1
+endif
+
+ifeq ($(NCPUS),0)
+	NCPUS:=1
+endif
+
+CC:=ccache $(CC)
+CXX:=ccache $(CXX)
+
+# Don't remove, otherwise mplayer/mencoder doesn't build.
+CFLAGS=
+
+REVISION=SVN-r30656
+
+DEBIAN_VERSION=\#define VERSION \"$(REVISION)\"
+DEBIAN_TITLE=\#define MP_TITLE \"MPlayer $(REVISION) (C) 2000-2010 MPlayer Team\\\n\"
+
+DEBIAN_ARCH = $(shell dpkg-architecture -qDEB_BUILD_ARCH)
+
+ifeq "$(DEB_BUILD_OPTIONS)" "marillat"
+	CONTROL=control.marillat
+else
+ifeq "$(DEBIAN_ARCH)" "i386"
+	CONTROL=control.others
+	FLAVOURS=-custom
+else
+ifeq "$(DEBIAN_ARCH)" "powerpc"
+	CONTROL=control.powerpc
+	FLAVOURS=-g4
+else
+ifeq "$(DEBIAN_ARCH)" "amd64"
+	CONTROL=control.amd64
+else
+ifeq "$(DEBIAN_ARCH)" "sparc"
+	CONTROL=control.sparc
+else
+ifeq "$(DEBIAN_ARCH)" "ia64"
+	CONTROL=control.ia64
+else
+ifeq "$(DEBIAN_ARCH)" "hppa"
+	CONTROL=control.hppa
+else
+ifeq "$(DEBIAN_ARCH)" "alpha"
+	CONTROL=control.alpha
+else
+ifeq "$(DEBIAN_ARCH)" "ppc64"
+	CONTROL=control.ppc64
+else
+ifeq "$(DEBIAN_ARCH)" "armel"
+	CONTROL=control.armel
+else
+ifeq "$(DEBIAN_ARCH)" "mipsel"
+	CONTROL=control.mipsel
+else
+ifeq "$(DEBIAN_ARCH)" "kfreebsd-i386"
+	CONTROL=control.kfreebsd-i386
+endif
+endif
+endif
+endif
+endif
+endif
+endif
+endif
+endif
+endif
+endif
+endif
+
+# Split up config options
+CONFIG_DIRS=--prefix=/usr --confdir=/etc/mplayer --datadir=/usr/share/mplayer
+CONFIG_MGA=--enable-xmga --enable-mga
+CONFIG_3DFX=--enable-tdfxfb --enable-s3fb
+CONFIG_ZR=--enable-zr
+CONFIG_CONTROL=--enable-joystick
+CONFIG_AUDIO=--disable-tremor-internal --enable-libopencore_amrnb --enable-libopencore_amrwb \
+	--disable-openal --disable-faad-internal --disable-liba52-internal
+CONFIG_XVMC=--enable-xvmc --with-xvmclib=XvMCW
+
+CONFIG_MISC=--language=all --enable-largefiles --enable-menu \
+	--disable-libdvdcss-internal --enable-radio --enable-radio-capture
+
+CONFIG_WIN32=--enable-win32dll
+
+# Options common to all architectures
+CONFIG_ARCH_INDEP=$(CONFIG_DIRS) $(CONFIG_MGA) $(CONFIG_CONTROL) \
+	$(CONFIG_AUDIO) $(CONFIG_MISC) $(CONFIG_XVMC)
+
+# Options common to all amd64 configurations
+CONFIG_AMD64_ALL=$(CONFIG_ARCH_INDEP) $(CONFIG_3DFX) $(CONFIG_ZR)
+
+# Options common to all i386 configurations
+CONFIG_I386_ALL=$(CONFIG_ARCH_INDEP) $(CONFIG_WIN32) $(CONFIG_3DFX) $(CONFIG_ZR) \
+	--realcodecsdir=/usr/lib/codecs --xanimcodecsdir=/usr/lib/codecs
+
+# Options common to all kfreebsd i386 configurations
+CONFIG_KFREEBSDI386_ALL=$(CONFIG_DIRS) \
+	$(CONFIG_AUDIO) $(CONFIG_XVMC) $(CONFIG_WIN32) --language=all \
+	--enable-largefiles --enable-menu --disable-libdvdcss-internal --disable-directfb
+
+CONFIGURE_KFREEBSDI386=$(CONFIG_KFREEBSDI386_ALL) --enable-runtime-cpudetection --enable-gui
+CONFIGURE_KFREEBSDI386_NOGUI=$(CONFIG_KFREEBSDI386_ALL) --enable-runtime-cpudetection
+
+# Options common to all ia64 configurations
+CONFIG_IA64_ALL=$(CONFIG_ARCH_INDEP) --disable-win32dll $(CONFIG_3DFX) --enable-gui
+
+# $(CONFIG_LIBAVCODEC_EXTERNAL)
+
+# Options common to all alpha configurations
+CONFIG_ALPHA_ALL=$(CONFIG_ARCH_INDEP) --disable-win32dll $(CONFIG_3DFX)
+
+# Options common to all armel configurations
+CONFIG_ARMEL_ALL=$(CONFIG_ARCH_INDEP) --disable-win32dll --disable-gui
+
+# Options common to all mipsel configurations
+CONFIG_MIPSEL_ALL=$(CONFIG_ARCH_INDEP) --disable-win32dll --disable-gui
+
+# Options common to all sparc configurations
+CONFIG_SPARC_ALL=$(CONFIG_ARCH_INDEP)
+
+# Options common to all hppa configurations
+CONFIG_HPPA_ALL=$(CONFIG_ARCH_INDEP) --disable-win32dll
+
+# Options common to all powerpc configurations
+CONFIG_PPC_ALL=$(CONFIG_ARCH_INDEP) --enable-gui --disable-win32dll \
+	--realcodecsdir=/usr/local/lib/codecs
+
+# Options common to all ppc64 configurations
+CONFIG_PPC64_ALL=$(CONFIG_ARCH_INDEP) --enable-gui --disable-win32dll \
+	--realcodecsdir=/usr/local/lib/codecs
+
+CONFIGURE_MPLAYER=$(CONFIG_I386_ALL) --enable-gui --enable-runtime-cpudetection
+
+CONFIGURE_NOGUI=$(CONFIG_I386_ALL) --enable-runtime-cpudetection
+
+# Doesn't work (10/07/08)
+#CONFIGURE_PPC=$(CONFIG_PPC_ALL) --enable-runtime-cpudetection
+CONFIGURE_PPC=$(CONFIG_PPC_ALL) --disable-altivec
+
+CONFIGURE_G4=$(CONFIG_PPC_ALL) --enable-altivec
+
+CONFIGURE_AMD64=$(CONFIG_AMD64_ALL) --enable-runtime-cpudetection --enable-gui
+CONFIGURE_AMD64_NOGUI=$(CONFIG_AMD64_ALL) --enable-runtime-cpudetection
+
+CONFIGURE_SPARC=$(CONFIG_SPARC_ALL) --enable-gui
+CONFIGURE_SPARC_NOGUI=$(CONFIG_SPARC_ALL)
+
+CONFIGURE_IA64=$(CONFIG_IA64_ALL)
+
+CONFIGURE_ALPHA=$(CONFIG_ALPHA_ALL) --enable-gui
+CONFIGURE_ALPHA_NOGUI=$(CONFIG_ALPHA_ALL)
+
+CONFIGURE_HPPA=$(CONFIG_HPPA_ALL) --enable-gui
+CONFIGURE_HPPA_NOGUI=$(CONFIG_HPPA_ALL)
+
+CONFIGURE_PPC64=$(CONFIG_PPC64_ALL) --enable-gui
+CONFIGURE_PPC64_NOGUI=$(CONFIG_PPC64_ALL)
+
+CONFIGURE_ARMEL=$(CONFIG_ARMEL_ALL)
+
+CONFIGURE_MIPSEL=$(CONFIG_MIPSEL_ALL)
+
+CONFIGURE_CUSTOM=$(CONFIG_I386_ALL)
+
+configure: configure-stamp
+configure-stamp: debian/stamp-patched
+	dh_testdir
+#	dh_testroot
+
+	cp debian/$(CONTROL) debian/control
+
+	dh_installdirs -a -A etc/mplayer usr/share/man/man1 \
+	usr/bin \
+	usr/share/man/cs/man1 usr/share/man/de/man1 usr/share/man/es/man1 \
+	usr/share/man/fr/man1 usr/share/man/hu/man1 usr/share/man/it/man1 \
+	usr/share/man/pl/man1 usr/share/man/ru/man1 usr/share/man/zh_CN/man1 \
+	usr/share/mime-info usr/share/application-registry \
+	usr/share/icons/hicolor/32x32/apps usr/share/icons/hicolor/48x48/apps
+
+# Copy files
+	for arch in $(FLAVOURS); do \
+	cp debian/mime debian/mplayer$$arch.mime; \
+	cp debian/preinst debian/mplayer$$arch.preinst; \
+	cp debian/links debian/mplayer$$arch.links; \
+	cp debian/examples debian/mplayer$$arch.examples; \
+	done
+
+ifeq "$(DEB_BUILD_OPTIONS)" "marillat"
+ifeq "$(DEBIAN_ARCH)" "i386"
+	############################## nogui #############################
+
+	CC="$(CC)" CXX="$(CXX)"	./configure $(CONFIGURE_NOGUI)
+
+	echo "$(DEBIAN_VERSION)"  >> version.h
+	echo "$(DEBIAN_TITLE)" >> version.h
+
+#	exit 1
+
+	$(MAKE) -j $(NCPUS)
+
+	$(MAKE) install prefix=$(CURDIR)/debian/mplayer-nogui/usr \
+	CONFDIR=$(CURDIR)/debian/mplayer-nogui/etc/mplayer \
+	DATADIR=$(CURDIR)/debian/mplayer-nogui/usr/share/mplayer \
+	LIBDIR=$(CURDIR)/debian/mplayer-nogui/usr/lib \
+	MANDIR=$(CURDIR)/debian/mplayer-nogui/usr/share/man \
+	BINDIR=$(CURDIR)/debian/mplayer-nogui/usr/bin
+
+	cp debian/mime-nogui debian/mplayer-nogui.mime
+	cp etc/example.conf debian/mplayer-nogui/etc/mplayer/mplayer.conf
+	cp etc/input.conf debian/mplayer-nogui/etc/mplayer
+	cp etc/menu.conf debian/mplayer-nogui/etc/mplayer
+	cp debian/mplayer-nogui.applications debian/mplayer-nogui/usr/share/application-registry/mplayer.applications
+	cp debian/mplayer.keys debian/mplayer-nogui/usr/share/mime-info
+
+# Mencoder
+	mv debian/mplayer-nogui/usr/bin/mencoder debian/mencoder/usr/bin
+	cp debian/mplayer-nogui/usr/share/man/man1/mplayer.1 debian/mencoder/usr/share/man/man1/mencoder.1
+
+# This suck
+	@for page in cs de es fr hu it pl ru zh_CN; do \
+	cp debian/mplayer-nogui/usr/share/man/$$page/man1/mplayer.1 \
+	debian/mencoder/usr/share/man/$$page/man1/mencoder.1; \
+	done
+
+	[ ! -f Makefile ] || $(MAKE) distclean
+
+	############################ mplayer GTK+ ###############################
+
+	CC="$(CC)" CXX="$(CXX)" ./configure $(CONFIGURE_MPLAYER)
+
+	echo "$(DEBIAN_VERSION)"  >> version.h
+	echo "$(DEBIAN_TITLE)" >> version.h
+
+	$(MAKE) -j $(NCPUS)
+
+	$(MAKE) install prefix=$(CURDIR)/debian/mplayer/usr \
+	CONFDIR=$(CURDIR)/debian/mplayer/etc/mplayer \
+	DATADIR=$(CURDIR)/debian/mplayer/usr/share/mplayer \
+	LIBDIR=$(CURDIR)/debian/mplayer/usr/lib \
+	MANDIR=$(CURDIR)/debian/mplayer/usr/share/man \
+	BINDIR=$(CURDIR)/debian/mplayer/usr/bin
+
+	cp etc/example.conf debian/mplayer/etc/mplayer/mplayer.conf
+	cp etc/input.conf debian/mplayer/etc/mplayer
+	cp etc/menu.conf debian/mplayer/etc/mplayer
+	cp debian/mplayer.applications debian/mplayer/usr/share/application-registry
+	cp debian/mplayer.keys debian/mplayer/usr/share/mime-info
+	cp debian/gmplayer.keys debian/mplayer/usr/share/mime-info
+
+	rm debian/mplayer/usr/bin/mencoder
+
+	dh_install -pmplayer etc/mplayer.xpm usr/share/pixmaps
+	dh_install -pmplayer etc/mplayer.desktop usr/share/applications
+
+	[ ! -f Makefile ] || $(MAKE) distclean
+
+
+endif	# i386
+endif	# marillat
+
+ifneq "$(DEB_BUILD_OPTIONS)" "marillat"
+ifeq "$(DEBIAN_ARCH)" "powerpc"
+	########################## generic powerpc #######################
+
+	CC="$(CC)" CXX="$(CXX)" ./configure $(CONFIGURE_PPC)
+
+	echo "$(DEBIAN_VERSION)"  >> version.h
+	echo "$(DEBIAN_TITLE)" >> version.h
+
+	perl -i -pe 's,-mtune=(\w+),-mtune=powerpc,' config.mak
+	perl -i -pe 's,-mcpu=(\w+),-mcpu=powerpc,' config.mak
+	perl -i -pe 's,-maltivec,-mno-altivec,' config.mak
+	perl -i -pe 's,-mabi=altivec,-mabi=no-altivec,' config.mak
+
+	perl -i -pe 's,#define HAVE_ALTIVEC 1,#undef HAVE_ALTIVEC,' config.h
+	perl -i -pe 's,#define HAVE_ALTIVEC_H 1,#undef HAVE_ALTIVEC_H,' config.h
+	perl -i -pe 's,HAVE_ALTIVEC   = yes,HAVE_ALTIVEC = no,' config.mak
+
+	$(MAKE) -j $(NCPUS)
+
+	$(MAKE) install prefix=$(CURDIR)/debian/mplayer/usr \
+	CONFDIR=$(CURDIR)/debian/mplayer/etc/mplayer \
+	DATADIR=$(CURDIR)/debian/mplayer/usr/share/mplayer \
+	LIBDIR=$(CURDIR)/debian/mplayer/usr/lib \
+	MANDIR=$(CURDIR)/debian/mplayer/usr/share/man \
+	BINDIR=$(CURDIR)/debian/mplayer/usr/bin
+
+	cp etc/example.conf debian/mplayer/etc/mplayer/mplayer.conf
+	cp etc/input.conf debian/mplayer/etc/mplayer
+	cp etc/menu.conf debian/mplayer/etc/mplayer
+	cp debian/mplayer.applications debian/mplayer/usr/share/application-registry
+	cp debian/mplayer.keys debian/mplayer/usr/share/mime-info
+	cp debian/gmplayer.keys debian/mplayer/usr/share/mime-info
+
+	dh_install -pmplayer etc/mplayer.xpm usr/share/pixmaps
+	dh_install -pmplayer etc/mplayer.desktop usr/share/applications
+
+# This suck
+	@for page in cs de es fr hu it pl ru zh_CN; do \
+	cp debian/mplayer/usr/share/man/$$page/man1/mplayer.1 \
+	debian/mencoder/usr/share/man/$$page/man1/mencoder.1; \
+	done
+
+# Mencoder
+	cp debian/mplayer/usr/share/man/man1/mplayer.1 debian/mencoder/usr/share/man/man1/mencoder.1
+	mv debian/mplayer/usr/bin/mencoder debian/mencoder/usr/bin
+
+	[ ! -f Makefile ] || $(MAKE) distclean
+
+	######################## powerpc with altivec ####################
+
+	CC="$(CC)" CXX="$(CXX)" ./configure $(CONFIGURE_G4)
+
+	echo "$(DEBIAN_VERSION)"  >> version.h
+	echo "$(DEBIAN_TITLE)" >> version.h
+
+	perl -i -pe 's,-mtune=(\w+),-mtune=7450,' config.mak
+	perl -i -pe 's,-mcpu=(\w+),-mcpu=7450,' config.mak
+
+	$(MAKE) -j $(NCPUS)
+
+	$(MAKE) install prefix=$(CURDIR)/debian/mplayer-g4/usr \
+	CONFDIR=$(CURDIR)/debian/mplayer-g4/etc/mplayer \
+	DATADIR=$(CURDIR)/debian/mplayer-g4/usr/share/mplayer \
+	LIBDIR=$(CURDIR)/debian/mplayer-g4/usr/lib \
+	MANDIR=$(CURDIR)/debian/mplayer-g4/usr/share/man \
+	BINDIR=$(CURDIR)/debian/mplayer-g4/usr/bin
+
+	cp etc/example.conf debian/mplayer-g4/etc/mplayer/mplayer.conf
+	cp etc/input.conf debian/mplayer-g4/etc/mplayer
+	cp etc/menu.conf debian/mplayer-g4/etc/mplayer
+	cp debian/mplayer.applications debian/mplayer-g4/usr/share/application-registry
+	cp debian/mplayer.keys debian/mplayer-g4/usr/share/mime-info
+	cp debian/gmplayer.keys debian/mplayer-g4/usr/share/mime-info
+	cp etc/menu.conf debian/mplayer-g4/etc/mplayer
+
+	dh_install -pmplayer-g4 etc/mplayer.xpm usr/share/pixmaps
+	dh_install -pmplayer-g4 etc/mplayer.desktop usr/share/applications
+
+# Mencoder
+	cp debian/mplayer-g4/usr/share/man/man1/mplayer.1 debian/mencoder-g4/usr/share/man/man1/mencoder.1
+	rm debian/mplayer-g4/usr/share/man/man1/mencoder.1
+	mv debian/mplayer-g4/usr/bin/mencoder debian/mencoder-g4/usr/bin
+
+	[ ! -f Makefile ] || $(MAKE) distclean
+
+else	# powerpc
+ifeq "$(DEBIAN_ARCH)" "ppc64"
+	########################## ppc64 nogui #######################
+
+	CC="$(CC)" CXX="$(CXX)" ./configure $(CONFIGURE_PPC64_NOGUI)
+
+	echo "$(DEBIAN_VERSION)"  >> version.h
+	echo "$(DEBIAN_TITLE)" >> version.h
+
+	perl -i -pe 's,-mtune=(\w+),-mtune=G5,' config.mak
+	perl -i -pe 's,-mcpu=(\w+),-mcpu=G5 -falign-loops=16,' config.mak
+
+	$(MAKE) -j $(NCPUS)
+
+	$(MAKE) install prefix=$(CURDIR)/debian/mplayer-nogui/usr \
+	CONFDIR=$(CURDIR)/debian/mplayer-nogui/etc/mplayer \
+	DATADIR=$(CURDIR)/debian/mplayer-nogui/usr/share/mplayer \
+	LIBDIR=$(CURDIR)/debian/mplayer-nogui/usr/lib \
+	MANDIR=$(CURDIR)/debian/mplayer-nogui/usr/share/man \
+	BINDIR=$(CURDIR)/debian/mplayer-nogui/usr/bin
+
+	cp debian/mime-nogui debian/mplayer-nogui.mime
+	cp etc/example.conf debian/mplayer-nogui/etc/mplayer/mplayer.conf
+	cp etc/input.conf debian/mplayer-nogui/etc/mplayer
+	cp etc/menu.conf debian/mplayer-nogui/etc/mplayer
+	cp debian/mplayer-nogui.applications debian/mplayer-nogui/usr/share/application-registry/mplayer.applications
+	cp debian/mplayer.keys debian/mplayer-nogui/usr/share/mime-info
+
+# Mencoder
+	cp debian/mplayer-nogui/usr/share/man/man1/mplayer.1 debian/mencoder/usr/share/man/man1/mencoder.1
+	mv debian/mplayer-nogui/usr/bin/mencoder debian/mencoder/usr/bin
+
+	[ ! -f Makefile ] || $(MAKE) distclean
+
+	############################ ppc64 ###############################
+
+	CC="$(CC)" CXX="$(CXX)" ./configure $(CONFIGURE_PPC64)
+
+	echo "$(DEBIAN_VERSION)"  >> version.h
+	echo "$(DEBIAN_TITLE)" >> version.h
+
+	perl -i -pe 's,-mtune=(\w+),-mtune=G5,' config.mak
+	perl -i -pe 's,-mcpu=(\w+),-mcpu=G5 -falign-loops=16,' config.mak
+
+	$(MAKE) -j $(NCPUS)
+
+	$(MAKE) install prefix=$(CURDIR)/debian/mplayer/usr \
+	CONFDIR=$(CURDIR)/debian/mplayer/etc/mplayer \
+	DATADIR=$(CURDIR)/debian/mplayer/usr/share/mplayer \
+	LIBDIR=$(CURDIR)/debian/mplayer/usr/lib \
+	MANDIR=$(CURDIR)/debian/mplayer/usr/share/man \
+	BINDIR=$(CURDIR)/debian/mplayer/usr/bin
+
+	cp etc/example.conf debian/mplayer/etc/mplayer/mplayer.conf
+	cp etc/input.conf debian/mplayer/etc/mplayer
+	cp etc/menu.conf debian/mplayer/etc/mplayer
+	cp debian/mplayer.applications debian/mplayer/usr/share/application-registry
+	cp debian/mplayer.keys debian/mplayer/usr/share/mime-info
+	cp debian/gmplayer.keys debian/mplayer/usr/share/mime-info
+
+	rm debian/mplayer/usr/bin/mencoder
+
+	dh_install -pmplayer etc/mplayer.xpm usr/share/pixmaps
+	dh_install -pmplayer etc/mplayer.desktop usr/share/applications
+
+# This suck
+	@for page in cs de es fr hu it pl ru zh_CN; do \
+	cp debian/mplayer/usr/share/man/$$page/man1/mplayer.1 \
+	debian/mencoder/usr/share/man/$$page/man1/mencoder.1; \
+	done
+
+	[ ! -f Makefile ] || $(MAKE) distclean
+
+else	# ppc64
+ifeq "$(DEBIAN_ARCH)" "amd64"
+	######################### amd64 nogui ############################
+
+	CC="$(CC)" CXX="$(CXX)" ./configure $(CONFIGURE_AMD64_NOGUI)
+
+	echo "$(DEBIAN_VERSION)"  >> version.h
+	echo "$(DEBIAN_TITLE)" >> version.h
+
+#	exit 1
+
+	$(MAKE) -j $(NCPUS)
+
+	$(MAKE) install prefix=$(CURDIR)/debian/mplayer-nogui/usr \
+	CONFDIR=$(CURDIR)/debian/mplayer-nogui/etc/mplayer \
+	DATADIR=$(CURDIR)/debian/mplayer-nogui/usr/share/mplayer \
+	LIBDIR=$(CURDIR)/debian/mplayer-nogui/usr/lib \
+	MANDIR=$(CURDIR)/debian/mplayer-nogui/usr/share/man \
+	BINDIR=$(CURDIR)/debian/mplayer-nogui/usr/bin
+
+	cp debian/mime-nogui debian/mplayer-nogui.mime
+	cp etc/example.conf debian/mplayer-nogui/etc/mplayer/mplayer.conf
+	cp etc/input.conf debian/mplayer-nogui/etc/mplayer
+	cp etc/menu.conf debian/mplayer-nogui/etc/mplayer
+	cp debian/mplayer-nogui.applications debian/mplayer-nogui/usr/share/application-registry/mplayer.applications
+	cp debian/mplayer.keys debian/mplayer-nogui/usr/share/mime-info
+
+# Mencoder
+	cp debian/mplayer-nogui/usr/share/man/man1/mplayer.1 debian/mencoder/usr/share/man/man1/mencoder.1
+	mv debian/mplayer-nogui/usr/bin/mencoder debian/mencoder/usr/bin
+
+	[ ! -f Makefile ] || $(MAKE) distclean
+
+	############################ amd64 ###############################
+
+	CC="$(CC)" CXX="$(CXX)" ./configure $(CONFIGURE_AMD64)
+
+	echo "$(DEBIAN_VERSION)"  >> version.h
+	echo "$(DEBIAN_TITLE)" >> version.h
+
+	$(MAKE) -j $(NCPUS)
+
+	$(MAKE) install prefix=$(CURDIR)/debian/mplayer/usr \
+	CONFDIR=$(CURDIR)/debian/mplayer/etc/mplayer \
+	DATADIR=$(CURDIR)/debian/mplayer/usr/share/mplayer \
+	LIBDIR=$(CURDIR)/debian/mplayer/usr/lib \
+	MANDIR=$(CURDIR)/debian/mplayer/usr/share/man \
+	BINDIR=$(CURDIR)/debian/mplayer/usr/bin
+
+	cp etc/example.conf debian/mplayer/etc/mplayer/mplayer.conf
+	cp etc/input.conf debian/mplayer/etc/mplayer
+	cp etc/menu.conf debian/mplayer/etc/mplayer
+	cp debian/mplayer.applications debian/mplayer/usr/share/application-registry
+	cp debian/mplayer.keys debian/mplayer/usr/share/mime-info
+	cp debian/gmplayer.keys debian/mplayer/usr/share/mime-info
+
+	rm debian/mplayer/usr/bin/mencoder
+
+	dh_install -pmplayer etc/mplayer.xpm usr/share/pixmaps
+	dh_install -pmplayer etc/mplayer.desktop usr/share/applications
+
+# This suck
+	@for page in cs de es fr hu it pl ru zh_CN; do \
+	cp debian/mplayer/usr/share/man/$$page/man1/mplayer.1 \
+	debian/mencoder/usr/share/man/$$page/man1/mencoder.1; \
+	done
+
+	[ ! -f Makefile ] || $(MAKE) distclean
+
+else	# amd64
+ifeq "$(DEBIAN_ARCH)" "sparc"
+	######################### sparc nogui ############################
+
+	CC="$(CC)" CXX="$(CXX)" ./configure $(CONFIGURE_SPARC_NOGUI)
+
+	echo "$(DEBIAN_VERSION)"  >> version.h
+	echo "$(DEBIAN_TITLE)" >> version.h
+
+	perl -i -pe 's,#define ENABLE_VIS 1,#define ENABLE_VIS 0,' config.h
+	perl -i -pe 's,#define HAVE_VIS 1,#define HAVE_VIS 0,' config.h
+	perl -i -pe 's,HAVE_VIS=yes,HAVE_VIS=no,' config.mak
+
+	$(MAKE) -j $(NCPUS)
+
+	$(MAKE) install prefix=$(CURDIR)/debian/mplayer-nogui/usr \
+	CONFDIR=$(CURDIR)/debian/mplayer-nogui/etc/mplayer \
+	DATADIR=$(CURDIR)/debian/mplayer-nogui/usr/share/mplayer \
+	LIBDIR=$(CURDIR)/debian/mplayer-nogui/usr/lib \
+	MANDIR=$(CURDIR)/debian/mplayer-nogui/usr/share/man \
+	BINDIR=$(CURDIR)/debian/mplayer-nogui/usr/bin
+
+	cp debian/mime-nogui debian/mplayer-nogui.mime
+	cp etc/example.conf debian/mplayer-nogui/etc/mplayer/mplayer.conf
+	cp etc/input.conf debian/mplayer-nogui/etc/mplayer
+	cp etc/menu.conf debian/mplayer-nogui/etc/mplayer
+	cp debian/mplayer-nogui.applications debian/mplayer-nogui/usr/share/application-registry/mplayer.applications
+	cp debian/mplayer.keys debian/mplayer-nogui/usr/share/mime-info
+
+# mencoder
+	cp debian/mplayer-nogui/usr/share/man/man1/mplayer.1 debian/mencoder/usr/share/man/man1/mencoder.1
+	mv debian/mplayer-nogui/usr/bin/mencoder debian/mencoder/usr/bin
+
+	[ ! -f Makefile ] || $(MAKE) distclean
+
+	########################## sparc #################################
+
+	CC="$(CC)" CXX="$(CXX)" ./configure $(CONFIGURE_SPARC)
+
+	echo "$(DEBIAN_VERSION)"  >> version.h
+	echo "$(DEBIAN_TITLE)" >> version.h
+
+	perl -i -pe 's,#define ENABLE_VIS 1,#define ENABLE_VIS 0,' config.h
+	perl -i -pe 's,#define HAVE_VIS 1,#define HAVE_VIS 0,' config.h
+	perl -i -pe 's,HAVE_VIS=yes,HAVE_VIS=no,' config.mak
+
+	$(MAKE) -j $(NCPUS)
+
+	$(MAKE) install prefix=$(CURDIR)/debian/mplayer/usr \
+	CONFDIR=$(CURDIR)/debian/mplayer/etc/mplayer \
+	DATADIR=$(CURDIR)/debian/mplayer/usr/share/mplayer \
+	LIBDIR=$(CURDIR)/debian/mplayer/usr/lib \
+	MANDIR=$(CURDIR)/debian/mplayer/usr/share/man \
+	BINDIR=$(CURDIR)/debian/mplayer/usr/bin
+
+	cp etc/example.conf debian/mplayer/etc/mplayer/mplayer.conf
+	cp etc/input.conf debian/mplayer/etc/mplayer
+	cp etc/menu.conf debian/mplayer/etc/mplayer
+	cp debian/mplayer.applications debian/mplayer/usr/share/application-registry
+	cp debian/mplayer.keys debian/mplayer/usr/share/mime-info
+	cp debian/gmplayer.keys debian/mplayer/usr/share/mime-info
+
+	rm debian/mplayer/usr/bin/mencoder
+
+	dh_install -pmplayer etc/mplayer.xpm usr/share/pixmaps
+	dh_install -pmplayer etc/mplayer.desktop usr/share/applications
+
+else	# sparc
+ifeq "$(DEBIAN_ARCH)" "armel"
+	######################### armel ############################
+
+	CC="$(CC)" CXX="$(CXX)" ./configure $(CONFIGURE_ARMEL)
+
+	echo "$(DEBIAN_VERSION)"  >> version.h
+	echo "$(DEBIAN_TITLE)" >> version.h
+
+#	perl -i -pe 's,#define ARCH_ARM 1,#define ARCH_ARM 1\n#define HAVE_NEON 0,' config.h
+
+	$(MAKE) -j $(NCPUS)
+
+	$(MAKE) install prefix=$(CURDIR)/debian/mplayer/usr \
+	CONFDIR=$(CURDIR)/debian/mplayer/etc/mplayer \
+	DATADIR=$(CURDIR)/debian/mplayer/usr/share/mplayer \
+	LIBDIR=$(CURDIR)/debian/mplayer/usr/lib \
+	MANDIR=$(CURDIR)/debian/mplayer/usr/share/man \
+	BINDIR=$(CURDIR)/debian/mplayer/usr/bin
+
+	cp debian/mime debian/mplayer.mime
+	cp etc/example.conf debian/mplayer/etc/mplayer/mplayer.conf
+	cp etc/input.conf debian/mplayer/etc/mplayer
+	cp etc/menu.conf debian/mplayer/etc/mplayer
+	cp debian/mplayer.applications debian/mplayer/usr/share/application-registry/mplayer.applications
+	cp debian/mplayer.keys debian/mplayer/usr/share/mime-info
+
+# mencoder
+	cp debian/mplayer/usr/share/man/man1/mplayer.1 debian/mencoder/usr/share/man/man1/mencoder.1
+	mv debian/mplayer/usr/bin/mencoder debian/mencoder/usr/bin
+
+	[ ! -f Makefile ] || $(MAKE) distclean
+
+else	# armel
+ifeq "$(DEBIAN_ARCH)" "mipsel"
+	######################### mipsel ############################
+
+	CC="ccache distcc" CXX="ccache distcc" ./configure $(CONFIGURE_MIPSEL)
+
+	echo "$(DEBIAN_VERSION)"  >> version.h
+	echo "$(DEBIAN_TITLE)" >> version.h
+
+	$(MAKE) -j 4
+
+	$(MAKE) install prefix=$(CURDIR)/debian/mplayer/usr \
+	CONFDIR=$(CURDIR)/debian/mplayer/etc/mplayer \
+	DATADIR=$(CURDIR)/debian/mplayer/usr/share/mplayer \
+	LIBDIR=$(CURDIR)/debian/mplayer/usr/lib \
+	MANDIR=$(CURDIR)/debian/mplayer/usr/share/man \
+	BINDIR=$(CURDIR)/debian/mplayer/usr/bin
+
+	cp debian/mime debian/mplayer.mime
+	cp etc/example.conf debian/mplayer/etc/mplayer/mplayer.conf
+	cp etc/input.conf debian/mplayer/etc/mplayer
+	cp etc/menu.conf debian/mplayer/etc/mplayer
+	cp debian/mplayer.applications debian/mplayer/usr/share/application-registry/mplayer.applications
+	cp debian/mplayer.keys debian/mplayer/usr/share/mime-info
+
+# mencoder
+	cp debian/mplayer/usr/share/man/man1/mplayer.1 debian/mencoder/usr/share/man/man1/mencoder.1
+	mv debian/mplayer/usr/bin/mencoder debian/mencoder/usr/bin
+
+	[ ! -f Makefile ] || $(MAKE) distclean
+
+else	# mipsel
+ifeq "$(DEB_BUILD_ARCH)" "ia64"
+	######################### ia64 Itanium 1 ############################
+
+	CC="$(CC)" CXX="$(CXX)" ./configure $(CONFIGURE_IA64)
+
+	echo "$(DEBIAN_VERSION)"  >> version.h
+	echo "$(DEBIAN_TITLE)" >> version.h
+
+	$(MAKE) -j $(NCPUS)
+
+	$(MAKE) install prefix=$(CURDIR)/debian/mplayer/usr \
+	CONFDIR=$(CURDIR)/debian/mplayer/etc/mplayer \
+	DATADIR=$(CURDIR)/debian/mplayer/usr/share/mplayer \
+	LIBDIR=$(CURDIR)/debian/mplayer/usr/lib \
+	MANDIR=$(CURDIR)/debian/mplayer/usr/share/man \
+	BINDIR=$(CURDIR)/debian/mplayer/usr/bin
+
+	cp etc/example.conf debian/mplayer/etc/mplayer/mplayer.conf
+	cp etc/input.conf debian/mplayer/etc/mplayer
+	cp etc/menu.conf debian/mplayer/etc/mplayer
+	cp debian/mplayer-nogui.applications debian/mplayer/usr/share/application-registry/mplayer.applications
+	cp debian/mplayer.keys debian/mplayer/usr/share/mime-info
+
+	dh_install -pmplayer etc/mplayer.xpm usr/share/pixmaps
+	dh_install -pmplayer etc/mplayer.desktop usr/share/applications
+
+# mencoder
+	cp debian/mplayer/usr/share/man/man1/mplayer.1 debian/mencoder/usr/share/man/man1/mencoder.1
+	mv debian/mplayer/usr/bin/mencoder debian/mencoder/usr/bin
+
+	[ ! -f Makefile ] || $(MAKE) distclean
+
+else	# ia64
+ifeq "$(DEB_BUILD_ARCH)" "hppa"
+	######################### hppa nogui ############################
+
+	CC="$(CC)" CXX="$(CXX)" ./configure $(CONFIGURE_HPPA_NOGUI)
+
+	echo "$(DEBIAN_VERSION)"  >> version.h
+	echo "$(DEBIAN_TITLE)" >> version.h
+
+	$(MAKE) -j $(NCPUS)
+
+	$(MAKE) install prefix=$(CURDIR)/debian/mplayer-nogui/usr \
+	CONFDIR=$(CURDIR)/debian/mplayer-nogui/etc/mplayer \
+	DATADIR=$(CURDIR)/debian/mplayer-nogui/usr/share/mplayer \
+	LIBDIR=$(CURDIR)/debian/mplayer-nogui/usr/lib \
+	MANDIR=$(CURDIR)/debian/mplayer-nogui/usr/share/man \
+	BINDIR=$(CURDIR)/debian/mplayer-nogui/usr/bin
+
+	cp debian/mime-nogui debian/mplayer-nogui.mime
+	cp etc/example.conf debian/mplayer-nogui/etc/mplayer/mplayer.conf
+	cp etc/input.conf debian/mplayer-nogui/etc/mplayer
+	cp etc/menu.conf debian/mplayer-nogui/etc/mplayer
+	cp debian/mplayer-nogui.applications debian/mplayer-nogui/usr/share/application-registry/mplayer.applications
+	cp debian/mplayer.keys debian/mplayer-nogui/usr/share/mime-info
+
+# mencoder
+	cp debian/mplayer-nogui/usr/share/man/man1/mplayer.1 debian/mencoder/usr/share/man/man1/mencoder.1
+	mv debian/mplayer-nogui/usr/bin/mencoder debian/mencoder/usr/bin
+
+	[ ! -f Makefile ] || $(MAKE) distclean
+
+	########################## hppa #################################
+
+	CC="$(CC)" CXX="$(CXX)" ./configure $(CONFIGURE_HPPA)
+
+	echo "$(DEBIAN_VERSION)"  >> version.h
+	echo "$(DEBIAN_TITLE)" >> version.h
+
+	$(MAKE) -j $(NCPUS)
+
+	$(MAKE) install prefix=$(CURDIR)/debian/mplayer/usr \
+	CONFDIR=$(CURDIR)/debian/mplayer/etc/mplayer \
+	DATADIR=$(CURDIR)/debian/mplayer/usr/share/mplayer \
+	LIBDIR=$(CURDIR)/debian/mplayer/usr/lib \
+	MANDIR=$(CURDIR)/debian/mplayer/usr/share/man \
+	BINDIR=$(CURDIR)/debian/mplayer/usr/bin
+
+	cp etc/example.conf debian/mplayer/etc/mplayer/mplayer.conf
+	cp etc/input.conf debian/mplayer/etc/mplayer
+	cp etc/menu.conf debian/mplayer/etc/mplayer
+	cp debian/mplayer.applications debian/mplayer/usr/share/application-registry
+	cp debian/mplayer.keys debian/mplayer/usr/share/mime-info
+	cp debian/gmplayer.keys debian/mplayer/usr/share/mime-info
+
+	rm debian/mplayer/usr/bin/mencoder
+
+	dh_install -pmplayer etc/mplayer.xpm usr/share/pixmaps
+	dh_install -pmplayer etc/mplayer.desktop usr/share/applications
+
+else	# hppa
+ifeq "$(DEB_BUILD_ARCH)" "alpha"
+	######################### alpha nogui ############################
+
+	CC="$(CC)" CXX="$(CXX)" ./configure $(CONFIGURE_HPPA_NOGUI)
+
+	echo "$(DEBIAN_VERSION)"  >> version.h
+	echo "$(DEBIAN_TITLE)" >> version.h
+
+	$(MAKE) -j $(NCPUS)
+
+	$(MAKE) install prefix=$(CURDIR)/debian/mplayer-nogui/usr \
+	CONFDIR=$(CURDIR)/debian/mplayer-nogui/etc/mplayer \
+	DATADIR=$(CURDIR)/debian/mplayer-nogui/usr/share/mplayer \
+	LIBDIR=$(CURDIR)/debian/mplayer-nogui/usr/lib \
+	MANDIR=$(CURDIR)/debian/mplayer-nogui/usr/share/man \
+	BINDIR=$(CURDIR)/debian/mplayer-nogui/usr/bin
+
+	cp debian/mime-nogui debian/mplayer-nogui.mime
+	cp etc/example.conf debian/mplayer-nogui/etc/mplayer/mplayer.conf
+	cp etc/input.conf debian/mplayer-nogui/etc/mplayer
+	cp etc/menu.conf debian/mplayer-nogui/etc/mplayer
+	cp debian/mplayer-nogui.applications debian/mplayer-nogui/usr/share/application-registry/mplayer.applications
+	cp debian/mplayer.keys debian/mplayer-nogui/usr/share/mime-info
+
+# mencoder
+	cp debian/mplayer-nogui/usr/share/man/man1/mplayer.1 debian/mencoder/usr/share/man/man1/mencoder.1
+	mv debian/mplayer-nogui/usr/bin/mencoder debian/mencoder/usr/bin
+
+	[ ! -f Makefile ] || $(MAKE) distclean
+
+	########################## alpha #################################
+
+	CC="$(CC)" CXX="$(CXX)" ./configure $(CONFIGURE_HPPA)
+
+	echo "$(DEBIAN_VERSION)"  >> version.h
+	echo "$(DEBIAN_TITLE)" >> version.h
+
+	$(MAKE) -j $(NCPUS)
+
+	$(MAKE) install prefix=$(CURDIR)/debian/mplayer/usr \
+	CONFDIR=$(CURDIR)/debian/mplayer/etc/mplayer \
+	DATADIR=$(CURDIR)/debian/mplayer/usr/share/mplayer \
+	LIBDIR=$(CURDIR)/debian/mplayer/usr/lib \
+	MANDIR=$(CURDIR)/debian/mplayer/usr/share/man \
+	BINDIR=$(CURDIR)/debian/mplayer/usr/bin
+
+	cp etc/example.conf debian/mplayer/etc/mplayer/mplayer.conf
+	cp etc/input.conf debian/mplayer/etc/mplayer
+	cp etc/menu.conf debian/mplayer/etc/mplayer
+	cp debian/mplayer.applications debian/mplayer/usr/share/application-registry
+	cp debian/mplayer.keys debian/mplayer/usr/share/mime-info
+	cp debian/gmplayer.keys debian/mplayer/usr/share/mime-info
+
+	rm debian/mplayer/usr/bin/mencoder
+
+	dh_install -pmplayer etc/mplayer.xpm usr/share/pixmaps
+	dh_install -pmplayer etc/mplayer.desktop usr/share/applications
+
+else	# alpha
+ifeq "$(DEBIAN_ARCH)" "kfreebsd-i386"
+	######################### kfreebsd-i386 nogui ############################
+
+	CC="$(CC)" CXX="$(CXX)" ./configure $(CONFIGURE_KFREEBSDI386_NOGUI)
+
+	echo "$(DEBIAN_VERSION)"  >> version.h
+	echo "$(DEBIAN_TITLE)" >> version.h
+
+#	exit 1
+
+	$(MAKE) -j $(NCPUS)
+
+	$(MAKE) install prefix=$(CURDIR)/debian/mplayer-nogui/usr \
+	CONFDIR=$(CURDIR)/debian/mplayer-nogui/etc/mplayer \
+	DATADIR=$(CURDIR)/debian/mplayer-nogui/usr/share/mplayer \
+	LIBDIR=$(CURDIR)/debian/mplayer-nogui/usr/lib \
+	MANDIR=$(CURDIR)/debian/mplayer-nogui/usr/share/man \
+	BINDIR=$(CURDIR)/debian/mplayer-nogui/usr/bin
+
+	cp debian/mime-nogui debian/mplayer-nogui.mime
+	cp etc/example.conf debian/mplayer-nogui/etc/mplayer/mplayer.conf
+	cp etc/input.conf debian/mplayer-nogui/etc/mplayer
+	cp etc/menu.conf debian/mplayer-nogui/etc/mplayer
+	cp debian/mplayer-nogui.applications debian/mplayer-nogui/usr/share/application-registry/mplayer.applications
+	cp debian/mplayer.keys debian/mplayer-nogui/usr/share/mime-info
+
+# Mencoder
+	cp debian/mplayer-nogui/usr/share/man/man1/mplayer.1 debian/mencoder/usr/share/man/man1/mencoder.1
+	mv debian/mplayer-nogui/usr/bin/mencoder debian/mencoder/usr/bin
+
+	[ ! -f Makefile ] || $(MAKE) distclean
+
+	############################ kfreebsd-i386 ###############################
+
+	CC="$(CC)" CXX="$(CXX)" ./configure $(CONFIGURE_KFREEBSDI386)
+
+	echo "$(DEBIAN_VERSION)"  >> version.h
+	echo "$(DEBIAN_TITLE)" >> version.h
+
+	$(MAKE) -j $(NCPUS)
+
+	$(MAKE) install prefix=$(CURDIR)/debian/mplayer/usr \
+	CONFDIR=$(CURDIR)/debian/mplayer/etc/mplayer \
+	DATADIR=$(CURDIR)/debian/mplayer/usr/share/mplayer \
+	LIBDIR=$(CURDIR)/debian/mplayer/usr/lib \
+	MANDIR=$(CURDIR)/debian/mplayer/usr/share/man \
+	BINDIR=$(CURDIR)/debian/mplayer/usr/bin
+
+	cp etc/example.conf debian/mplayer/etc/mplayer/mplayer.conf
+	cp etc/input.conf debian/mplayer/etc/mplayer
+	cp etc/menu.conf debian/mplayer/etc/mplayer
+	cp debian/mplayer.applications debian/mplayer/usr/share/application-registry
+	cp debian/mplayer.keys debian/mplayer/usr/share/mime-info
+	cp debian/gmplayer.keys debian/mplayer/usr/share/mime-info
+
+	rm debian/mplayer/usr/bin/mencoder
+
+	dh_install -pmplayer etc/mplayer.xpm usr/share/pixmaps
+	dh_install -pmplayer etc/mplayer.desktop usr/share/applications
+
+# This suck
+	@for page in cs de es fr hu it pl ru zh_CN; do \
+	cp debian/mplayer/usr/share/man/$$page/man1/mplayer.1 \
+	debian/mencoder/usr/share/man/$$page/man1/mencoder.1; \
+	done
+
+	[ ! -f Makefile ] || $(MAKE) distclean
+
+else	# kfreebsd-i386
+	############################ Custom ##############################
+
+	CC="$(CC)" CXX="$(CXX)" ./configure $(CONFIGURE_CUSTOM)
+
+	echo "$(DEBIAN_VERSION)"  >> version.h
+	echo "$(DEBIAN_TITLE)" >> version.h
+
+	$(MAKE) -j $(NCPUS)
+
+	$(MAKE) install prefix=$(CURDIR)/debian/mplayer-custom/usr \
+	CONFDIR=$(CURDIR)/debian/mplayer-custom/etc/mplayer \
+	DATADIR=$(CURDIR)/debian/mplayer-custom/usr/share/mplayer \
+	LIBDIR=$(CURDIR)/debian/mplayer-custom/usr/lib \
+	MANDIR=$(CURDIR)/debian/mplayer-custom/usr/share/man \
+	BINDIR=$(CURDIR)/debian/mplayer-custom/usr/bin
+
+	cp etc/example.conf debian/mplayer-custom/etc/mplayer/mplayer.conf
+	cp etc/menu.conf debian/mplayer-custom/etc/mplayer
+	cp debian/mplayer.applications debian/mplayer-custom/usr/share/application-registry
+	cp debian/mplayer.keys debian/mplayer-custom/usr/share/mime-info
+	cp etc/input.conf debian/mplayer-custom/etc/mplayer
+
+	dh_install -pmplayer-custom etc/mplayer.xpm usr/share/pixmaps
+	dh_install -pmplayer-custom etc/mplayer.desktop usr/share/applications
+
+# This suck
+	for page in cs de es fr hu it pl ru zh_CN; do \
+	cp debian/mplayer-custom/usr/share/man/$$page/man1/mplayer.1 debian/mencoder-custom/usr/share/man/$$page/man1/mencoder.1; \
+	done
+	cp debian/mplayer-custom/usr/share/man/man1/mplayer.1 debian/mencoder-custom/usr/share/man/man1/mencoder.1
+	mv debian/mplayer-custom/usr/bin/mencoder debian/mencoder-custom/usr/bin
+endif
+endif
+endif
+endif
+endif
+endif
+endif
+endif
+endif
+endif
+endif
+
+# Remove fibmap_mplayer
+	find -name fibmap_mplayer | xargs -r rm
+
+# Remove mencode.1 in mplayer-* packages
+	find debian/mplayer* -name mencoder.1 | xargs -r rm
+
+	find debian -type d | xargs rmdir -p --ignore-fail-on-non-empty
+
+	touch configure-stamp
+
+build: build-stamp
+build-stamp: configure-stamp
+#	dh_testdir
+
+#	$(MAKE) dep
+#	$(MAKE)
+
+#	touch build-stamp
+
+clean:
+	dh_testdir
+#	dh_testroot
+	rm -rf configure-stamp build-stamp
+
+	-$(MAKE) distclean
+
+	debian/rules unpatch
+
+	dh_clean build codec-cfg loader/DirectShow/test.divx \
+	debian/README.debian debian/dirs debian/templates config.h \
+	debian/postinst.templates debian/config debian/TODO.Debian \
+	TOOLS/cpuinfo build-stamp configure-stamp libdha/libdha.so.0.1 \
+	debian/mplayer-*.mime \
+	debian/mplayer-*.postinst \
+	debian/mplayer-*.preinst \
+	debian/mplayer-*.postrm \
+	debian/mplayer-*.links \
+	debian/mplayer-*.examples \
+	libavcodec/libavcodec.a version.h \
+	libswscale/x86/yuv2rgb_mmx.o
+
+#	find -name config.mak | xargs -r rm
+	find -name *.d | xargs -r rm
+
+#	perl -i -pe 's,-march=(\D+)(\d+),-march=i486,' config.mak
+#	perl -i -pe 's,-mtune=(\D+)(\d+),-mtune=i486,' config.mak
+
+	cp debian/$(CONTROL) debian/control
+
+install: build
+	dh_testdir
+	dh_testroot
+#	dh_prep
+#	dh_installdirs etc
+
+#	$(MAKE) install prefix=$(CURDIR)/debian/${package}/usr
+
+#	cp etc/example.conf debian/${package}/etc/mplayer/mplayer.conf
+
+# Build architecture-independent files here.
+binary-indep: build install
+	dh_testdir -i
+	dh_testroot -i
+	dh_installdocs -i DOCS/HTML DOCS/tech
+	dh_installchangelogs -i Changelog
+	dh_link -i
+	dh_compress -i
+	dh_fixperms -i
+	dh_installdeb -i
+	dh_gencontrol -i
+	dh_md5sums -i
+	dh_builddeb -i
+
+# Build architecture-dependent files here.
+binary-arch: build install
+	dh_testdir -a
+	dh_testroot -a
+	dh_installdocs -a -A debian/README.Debian
+	dh_installexamples -A etc/codecs.conf
+	dh_installmenu -a
+	dh_installmime -a
+#	dh_installman -A DOCS/mencoder.1
+	dh_installchangelogs -A -a Changelog
+
+	dh_link -a
+	dh_strip -a
+	dh_compress -a
+	dh_fixperms -a
+#	dh_makeshlibs -ldebian/mplayer-*/usr/lib
+	dh_installdeb -a
+	dh_shlibdeps -a
+
+# Hack to add svgalib-dummyg1 dependency
+	perl -pi -e 's/libsvga1(\s*\(.*?\))?/$$& | svgalib-dummyg1$$1/' \
+	debian/*.substvars
+
+	dh_gencontrol -s
+	dh_md5sums -s
+	dh_builddeb -s
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install configure

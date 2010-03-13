@@ -1,0 +1,124 @@
+MPlayer and mencoder for Debian i386
+------------------------------------
+
+  Byte order: little-endian
+  Optimizing for: Runtime CPU-Detection enabled
+
+  Languages:
+    Messages/GUI: en
+    Manual pages: ru pl it hu fr es en de cs  
+
+  Enabled optional drivers:
+    Input: vstream ftp pvr radio tv-teletext tv-v4l2 tv-v4l tv live555 cddb
+           cdda dvdread(internal) vcd dvb smb network
+    Codecs: x264 xvid libdv libamr_wb libamr_nb libavcodec qtx real xanim
+            win32 faad2 faac musepack libmpeg2 libdca liba52 mp3lib
+            libtheora speex libvorbis twolame libmad liblzo gif
+    Audio output: alsa openal jack pulse esd arts oss v4l2 nas sdl mpegpes(dvb) 
+    Video output: v4l2 dxr3 sdl gif89a pnm jpeg png mpegpes(dvb) fbdev svga
+                  caca aa ggi xmga mga xvidix cvidix opengl dga xvmc xv x11
+                  xover dfbmga directfb md5sum tga s3fb tdfxfb
+    Audio filters: ladspa
+  Disabled optional drivers:
+    Input: dvdnav tv-dshow nemesi libdvdcss(internal)
+    Codecs: toolame
+    Audio output: sun ivtv dxr2
+    Video output: ivtv dxr2 vesa zr zr2 winvidix 3dfx bl xvr100 tdfx_vid
+    Audio filters:
+
+------------------------------------------------------------------------------
+The amd64 package has been compiled with the following options :
+
+  Byte order: little-endian
+  Optimizing for: 
+
+  Languages:
+    Messages/GUI: en
+    Manual pages:  de en es fr hu it pl sv
+
+  Enabled optional drivers:
+    Input: vstream ftp network tv-v4l2 tv-v4l edl tv live555 matroska cdda
+           dvdread vcd dvb smb
+    Codecs: x264 xvid libdv amr_wb amr_nb libavcodec.so xanim
+            faad2(external) faac musepack libmpeg2 libdts liba52 mp3lib
+            libtheora libvorbis libmad liblzo gif
+    Audio output: alsa jack polyp esd arts oss nas sdl mpegpes(dvb) 
+    Video output: xvidix cvidix sdl gif89a md5sum pnm jpeg png mpegpes(dvb)
+                  fbdev caca aa ggi xmga mga opengl dga xv x11 xover dfbmga
+                  directfb tga tdfxfb 3dfx
+    Audio filters: ladspa 
+  Disabled optional drivers:
+    Input: tv-bsdbt848 mpdvdkit 
+    Codecs: qtx opendivx real dshow/dmo win32 twolame toolame 
+    Audio output: sgi sun dxr2 dsound win32 
+    Video output: winvidix bl zr zr2 dxr3 dxr2 directx vesa svga xvmc tdfx_vid 
+    Audio filters:
+
+------------------------------------------------------------------------------
+
+The mplayer-g4 package has been compiled with the following options :
+
+  Byte order: Big Endian
+  Optimizing for: 7450 altivec
+
+  Languages:
+    Messages/GUI: en
+    Manual pages: de en es fr hu it pl
+
+  Enabled optional drivers:
+    Input: ftp network tv-v4l2 tv-v4l edl tv live.com matroska(internal) 
+           cdda mpdvdkit2 vcd dvb smb 
+    Codecs: flac(external) xvid libdv libavcodec real xanim 
+            faad2(external) libvorbis libmad liblzo gif 
+    Audio output: alsa1x esd arts oss nas sdl mpegpes(dvb) 
+    Video output: xvidix cvidix dxr3 sdl gif89a jpeg png mpegpes(dvb) 
+                  fbdev svga aa ggi xmga mga opengl dga xv x11 xover dfbmga 
+		  directfb tga tdfxfb 3dfx 
+  Disabled optional drivers:
+    Input: tv-bsdbt848 dvdread 
+    Codecs: qtx opendivx dshow/dmo win32 libtheora 
+    Audio output: sgi sun dxr2 win32 macosx 
+    Video output: winvidix bl zr zr2 dxr2 directx vesa xvmc tdfx_vid 
+
+------------------------------------------------------------------------------
+
+The sparc package has been compiled with the following options :
+
+  Byte order: big-endian
+  Optimizing for: v9
+
+  Languages:
+    Messages/GUI: en
+    Manual pages:  de en es fr hu it pl sv
+
+  Enabled optional drivers:
+    Input: vstream ftp network tv-v4l2 tv-v4l edl tv live555 matroska cdda
+           dvdread vcd dvb smb
+    Codecs: x264 xvid libdv amr_wb amr_nb libavcodec.so xanim
+            faad2(external) faac musepack libmpeg2 libdts liba52 mp3lib
+            libtheora libvorbis libmad liblzo gif
+    Audio output: alsa jack polyp esd arts oss nas sdl mpegpes(dvb) 
+    Video output: sdl gif89a md5sum pnm jpeg png mpegpes(dvb) fbdev caca aa
+                  ggi xmga mga opengl dga xv x11 xover dfbmga directfb tga
+                  tdfxfb 3dfx
+    Audio filters: ladspa 
+  Disabled optional drivers:
+    Input: tv-bsdbt848 mpdvdkit 
+    Codecs: qtx opendivx real dshow/dmo win32 twolame toolame 
+    Audio output: sgi sun dxr2 dsound win32 
+    Video output: xvidix winvidix cvidix bl zr zr2 dxr3 dxr2 directx vesa
+                  svga xvmc tdfx_vid
+    Audio filters:
+
+------------------------------------------------------------------------------
+
+These error messages :
+
+libdha: DHA kernelhelper failed: No such device
+libdha: DHA kernelhelper failed: No such device
+
+Can be ignored, dhahelper is not yet finished.
+
+------------------------------------------------------------------------------
+
+Christian

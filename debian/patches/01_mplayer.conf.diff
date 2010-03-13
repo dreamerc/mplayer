@@ -1,0 +1,34 @@
+Index: mplayer-dmo-1.0.rc2svn20091220/etc/example.conf
+===================================================================
+--- mplayer-dmo-1.0.rc2svn20091220.orig/etc/example.conf	2009-12-20 10:02:39.000000000 +0100
++++ mplayer-dmo-1.0.rc2svn20091220/etc/example.conf	2009-12-20 10:03:50.000000000 +0100
+@@ -75,7 +75,7 @@
+ ##################
+ 
+ # Specify default audio driver (see -ao help for a list).
+-#ao=oss
++ao=alsa,
+ 
+ # Use SDL audio driver with the esd subdriver by default.
+ #ao = sdl:esd
+@@ -133,6 +133,9 @@
+ # DVD: Play English audio tracks if available.
+ #alang = en
+ 
++# You can also configure mplayer in that file without touching this file.
++include = /etc/mplayer/mplayer.conf.local
++
+ ###################
+ # DVDNAV Settings #
+ ###################
+@@ -141,5 +144,8 @@
+ #mouse-movements=yes
+ #nocache=yes
+ 
+-# You can also include other configuration files.
+-#include = /path/to/the/file/you/want/to/include
++# get a default OSD font from fontconfig
++
++fontconfig = yes
++font = "Sans"
++subfont-text-scale = 3

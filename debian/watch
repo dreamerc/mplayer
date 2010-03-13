@@ -1,0 +1,4 @@
+version=3
+
+opts="dversionmangle=s/\.rc2svn20071207/rc2/" \
+http://www1.mplayerhq.hu/MPlayer/releases/MPlayer-(.*)\.tar\.bz2

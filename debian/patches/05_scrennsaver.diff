@@ -1,0 +1,13 @@
+Index: mplayer-dmo-1.0.rc2svn20100104/libvo/x11_common.c
+===================================================================
+--- mplayer-dmo-1.0.rc2svn20100104.orig/libvo/x11_common.c	2010-01-05 14:19:26.000000000 +0100
++++ mplayer-dmo-1.0.rc2svn20100104/libvo/x11_common.c	2010-01-05 14:19:44.000000000 +0100
+@@ -90,7 +90,7 @@
+ static int orig_layer = 0;
+ static int old_gravity = NorthWestGravity;
+ 
+-int stop_xscreensaver = 0;
++int stop_xscreensaver = 1;
+ 
+ static int dpms_disabled = 0;
+ 
