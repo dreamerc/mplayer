@@ -88,7 +88,7 @@ CONFIG_AUDIO=--disable-tremor-internal --enable-libopencore_amrnb --enable-libop
 CONFIG_XVMC=--enable-xvmc --with-xvmclib=XvMCW
 
 CONFIG_MISC=--language=all --enable-largefiles --enable-menu \
-	--disable-libdvdcss-internal --enable-radio --enable-radio-capture
+	--disable-libdvdcss-internal --enable-radio --enable-radio-capture --enable-vdpau
 
 CONFIG_WIN32=--enable-win32dll
 

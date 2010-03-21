@@ -1,3 +1,10 @@
+mplayer-dmo (1:1.0.rc2svn20100313-0.1) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Enable libvdpau-dev | nvidia-libvdpau1-dev
+
+ -- Shan-Bin Chen <dreamerwolf.tw@gmail.com>  Sun, 21 Mar 2010 16:08:14 +0800
+
 mplayer-dmo (1:1.0.rc2svn20100313-0.0) unstable; urgency=low
 
   * New svn release (30886).
