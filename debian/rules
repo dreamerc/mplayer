@@ -87,8 +87,10 @@ CONFIG_AUDIO=--disable-tremor-internal --enable-libopencore_amrnb --enable-libop
 	--disable-openal --disable-faad-internal --disable-liba52-internal
 CONFIG_XVMC=--enable-xvmc --with-xvmclib=XvMCW
 
+# Add nVidia - VDPAU
 CONFIG_MISC=--language=all --enable-largefiles --enable-menu \
-	--disable-libdvdcss-internal --enable-radio --enable-radio-capture
+	--disable-libdvdcss-internal --enable-radio --enable-radio-capture \
+	--enable-vdpau
 
 CONFIG_WIN32=--enable-win32dll
 

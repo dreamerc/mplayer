@@ -19,7 +19,7 @@ Build-Depends: debhelper (>> 7), libncurses5-dev, libsvga1-dev [i386], gawk,
  libfaac-dev, libxinerama-dev, libtwolame-dev, libspeex-dev, libopenal-dev,
  libopencore-amrnb-dev, libvdpau-dev [amd64 i386], yasm [amd64 i386],
  libenca-dev, libdirac-dev (>= 1.0.2-2), libschroedinger-dev, liba52-0.7.4-dev,
- libdts-dev, libbz2-dev, libmng-dev
+ libdts-dev, libbz2-dev, libmng-dev, libvdpau-dev | nvidia-libvdpau1-dev
 
 Package: mplayer
 Architecture: any
